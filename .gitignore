@@ -1,3 +1,6 @@
 tmp
 # Added by goreleaser init:
 dist/
+# Build artifacts (binaries in root)
+/asbx
+/sbx

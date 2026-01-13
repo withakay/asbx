@@ -11,6 +11,16 @@ builds:
       - amd64
       - arm64
 
+  - id: asbx
+    no_unique_dist_dir: true
+    main: ./cmd/asbx
+    binary: asbx-{{ .Arch }}-{{ .Os }}
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
 archives:
   - formats:
       - binary

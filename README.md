@@ -1,17 +1,150 @@
-# sbx
+# sbx & asbx
 
-- `sbx` is an easy-to-use command-line tool for running commands with macOS sandbox-exec policies using flag-based interface.
-- This command is heavily inspired by [littledivy](https://github.com/littledivy)'s [sh-deno](https://github.com/littledivy/sh-deno).
+This repository contains two macOS sandbox tools:
+
+- **sbx** - A low-level CLI tool for running commands with macOS sandbox-exec policies using a flag-based interface.
+- **asbx** - A higher-level CLI tool for running AI coding agents in a secure sandbox with pre-configured profiles.
+
+Both tools are heavily inspired by [littledivy](https://github.com/littledivy)'s [sh-deno](https://github.com/littledivy/sh-deno).
+
+## Important Notes
+
+- **These tools use the deprecated `sandbox-exec` feature.**
+- **These tools are experimental and unstable.**
+- **macOS only** (darwin/amd64 and darwin/arm64)
+
+---
+
+# asbx - Agent Sandbox
+
+`asbx` runs AI coding agents in a secure macOS sandbox with pre-configured profiles that restrict file system access to protect your system while allowing the agent to work effectively.
+
+## Features
+
+- Pre-configured profiles for popular AI coding agents (opencode, claude, codex)
+- Restricts file operations to the project directory and essential paths
+- Allows full outbound network for API calls
+- Supports additional path customization via flags
+- Print profile option for inspection and debugging
+
+## Installation
+
+```bash
+go install github.com/syumai/sbx/cmd/asbx@latest
+```
+
+Or download from [releases](https://github.com/syumai/sbx/releases).
+
+## Usage
+
+```
+asbx --agent-harness=<agent> [flags] <command> [command-args...]
+asbx --agent-harness=<agent> [flags] -- <command> [command-flags] [command-args...]
+```
+
+### Supported Agents
+
+| Agent | Description |
+|-------|-------------|
+| `opencode` | [SST OpenCode](https://opencode.ai) - Open source AI coding agent |
+| `claude` | Anthropic Claude Code |
+| `codex` | OpenAI Codex CLI |
+
+### Flags
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--agent-harness` | `-a` | Agent harness type (required): opencode, claude, codex |
+| `--project-path` | `-p` | Project directory path (defaults to current directory) |
+| `--print-profile` | `-P` | Print the generated sandbox profile and exit |
+| `--extra-read` | | Additional read-only paths (can be specified multiple times) |
+| `--extra-write` | | Additional write paths (can be specified multiple times) |
+| `--extra-exec` | | Additional executable paths (can be specified multiple times) |
+
+### Examples
+
+Run opencode in sandbox for current directory:
+```bash
+asbx --agent-harness=opencode opencode
+```
+
+Run opencode for a specific project:
+```bash
+asbx --agent-harness=opencode --project-path=/path/to/project opencode
+```
+
+Run with extra paths:
+```bash
+asbx --agent-harness=opencode --extra-read=/custom/config -- opencode
+```
+
+Print the generated sandbox profile:
+```bash
+asbx --agent-harness=opencode --print-profile
+```
+
+## Agent Profiles
+
+### OpenCode Profile
+
+The opencode profile is designed for [OpenCode](https://opencode.ai)'s client/server architecture:
+
+**Read Access:**
+- System binaries: `/usr`, `/bin`, `/sbin`, `/System`, `/Library`, `/opt`
+- Homebrew: `/opt/homebrew`, `/usr/local/Homebrew`
+- OpenCode config: `~/.opencode.json`, `~/.config/opencode/`
+- Git config: `~/.gitconfig`, `~/.config/git/`
+- SSH (limited): `~/.ssh/known_hosts`, `~/.ssh/config`
+- Shell configs: `~/.zshrc`, `~/.bashrc`, etc.
+- Version managers: `~/.nvm`, `~/.fnm`, `~/.pyenv`, `~/.cargo`, `~/.rustup`, etc.
+
+**Write Access:**
+- Project directory (full read/write)
+- Temp directories: `/tmp`, `/var/tmp`, `/var/folders`
+- Cache: `~/.cache`
+- OpenCode data: `~/.local/share/opencode/`
+
+**Network:**
+- Full outbound network (for API calls)
+- Inbound network (for server mode - `opencode serve`)
+
+### Claude Profile
+
+Similar to opencode but tuned for Claude Code:
+- Includes `~/.claude` and `~/.claude.json` access
+- No inbound network by default
+
+### Codex Profile
+
+Minimal profile for OpenAI Codex CLI:
+- Standard system and tool access
+- Codex-specific config directories
+
+## Security Model
+
+The sandbox uses macOS's native `sandbox-exec` (Seatbelt) to enforce:
+
+1. **File System Isolation** - Agents can only read/write to explicitly allowed paths
+2. **Network Control** - Outbound network is allowed; inbound can be enabled for server mode
+3. **Process Execution** - Only binaries in approved paths can be executed
+
+### Blocked by Default
+
+- `~/Documents`, `~/Desktop`, `~/Downloads`
+- `~/.ssh` (except known_hosts and config)
+- `~/.aws`, `~/.gnupg`, `~/.kube`
+- Any paths not explicitly allowed
+
+---
+
+# sbx - Low-level Sandbox
+
+`sbx` is a low-level CLI tool for running commands with custom macOS sandbox-exec policies.
 
 ## Features
 
 - Easy allow/deny configuration for common operations (file, network, process, etc.)
-- Supports both of relative and absolute path filtering.
-
-## Important Notes
-
-- **This command is using deprecated feature (sandbox-exec).**
-- **This command is experimental and unstable.**
+- Supports both relative and absolute path filtering.
 
 ## Notes
 
@@ -21,11 +154,11 @@
 
 ## Installation
 
-```
+```bash
 go install github.com/syumai/sbx/cmd/sbx@latest
 ```
 
-or download binary from [releases](https://github.com/syumai/sbx/releases) page.
+Or download from [releases](https://github.com/syumai/sbx/releases).
 
 ## Usage
 
@@ -41,10 +174,10 @@ sbx [flags] -- <command> [command-flags] [command-args...]
 - You can allow operations by specifying the corresponding flags.
 - You can deny operations by specifying the corresponding flags with `deny-` prefix.
 - `-all` flags are boolean flags that allow / deny all operations for the corresponding operation type.
-  - Another flags requires a path arguments as comma-separated values.
-- `-network` flags supports only settings below.
-  - only `ip` protocol.
-  - only `localhost` or `*` for host.
+  - Other flags require path arguments as comma-separated values.
+- `-network` flags support only settings below:
+  - Only `ip` protocol.
+  - Only `localhost` or `*` for host.
 
 #### Special Flag
 
@@ -82,10 +215,9 @@ sbx [flags] -- <command> [command-flags] [command-args...]
 - `--allow-process-exec-all`  Allow all process execution
 - `--deny-process-exec-all`   Deny all process execution
 
-### Example
+### Examples
 
-* Allow read operation for current directory.
-
+Allow read operation for current directory:
 ```console
 sbx --allow-file-read . ls .
 # same as above
@@ -95,18 +227,17 @@ sbx --allow-file-read='.' ls .
 sbx --allow-file-read='.' -- ls -l .
 ```
 
-* Allow network operation for `localhost:8080`.
-
+Allow network operation for `localhost:8080`:
 ```console
 sbx --allow-network='localhost:8080' curl http://localhost:8080
 ```
 
-* Allow network operation for remote host.
-  - Allow read access to the `/opt/local` directory to retrieve CA certificates. (This example uses homebrew-installed `curl`.)
-
+Allow network operation for remote host (with CA certificate access):
 ```console
 sbx --allow-network='*:443' --allow-file-read='/opt/local' curl https://syum.ai/ascii
 ```
+
+---
 
 ## License
 
