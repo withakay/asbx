@@ -108,17 +108,67 @@ The opencode profile is designed for [OpenCode](https://opencode.ai)'s client/se
 - Full outbound network (for API calls)
 - Inbound network (for server mode - `opencode serve`)
 
-### Claude Profile
+### Claude Code Profile
 
-Similar to opencode but tuned for Claude Code:
-- Includes `~/.claude` and `~/.claude.json` access
-- No inbound network by default
+The Claude Code profile is designed for [Anthropic's Claude Code](https://code.claude.com):
 
-### Codex Profile
+**Configuration Paths** (based on [Claude Code settings docs](https://code.claude.com/docs/en/settings)):
+- `~/.claude.json` - Main global config (OAuth, MCP servers, preferences, per-project state)
+- `~/.claude/settings.json` - User-specific global settings
+- `~/.claude/settings.local.json` - User-specific local settings
+- `.claude/settings.json` - Project settings (checked into git)
+- `.claude/settings.local.json` - Project-specific local settings
+- `.mcp.json` - Project MCP server configuration
 
-Minimal profile for OpenAI Codex CLI:
-- Standard system and tool access
-- Codex-specific config directories
+**Read Access:**
+- System binaries: `/usr`, `/bin`, `/sbin`, `/System`, `/Library`, `/opt`
+- Homebrew: `/opt/homebrew`, `/usr/local/Homebrew`
+- Git config: `~/.gitconfig`, `~/.config/git/`
+- SSH (limited): `~/.ssh/known_hosts`, `~/.ssh/config`
+- Shell configs: `~/.zshrc`, `~/.bashrc`, etc.
+- Version managers: `~/.nvm`, `~/.fnm`, `~/.pyenv`, `~/.cargo`, `~/.rustup`, etc.
+- Editor configs: `~/.vscode`, `~/.cursor`
+
+**Write Access:**
+- Project directory (full read/write)
+- Temp directories: `/tmp`, `/var/tmp`, `/var/folders`
+- Cache: `~/.cache`, `~/.npm`
+- Claude config: `~/.claude/`, `~/.claude.json`
+
+**Network:**
+- Full outbound network (for Anthropic API calls)
+- No inbound network
+
+### Codex CLI Profile
+
+The Codex profile is designed for [OpenAI's Codex CLI](https://developers.openai.com/codex/cli/):
+
+**Configuration Paths** (based on [Codex config reference](https://developers.openai.com/codex/config-reference/)):
+- `~/.codex/` - CODEX_HOME directory (main config home)
+- `~/.codex/config.toml` - Main configuration (model, provider, approval policies, MCP)
+- `~/.codex/AGENTS.md` - Global custom instructions
+- `~/.codex/skills/**/SKILL.md` - Skills definitions
+- `~/.codex/rules/` - Execution policy rules
+- `.codex/` - Project-specific configuration layers
+- `AGENTS.md` - Project-specific instructions
+
+**Read Access:**
+- System binaries: `/usr`, `/bin`, `/sbin`, `/System`, `/Library`, `/opt`
+- Homebrew: `/opt/homebrew`, `/usr/local/Homebrew`
+- Git config: `~/.gitconfig`, `~/.config/git/`
+- SSH (limited): `~/.ssh/known_hosts`, `~/.ssh/config`
+- Shell configs: `~/.zshrc`, `~/.bashrc`, etc.
+- Version managers: `~/.nvm`, `~/.fnm`, `~/.pyenv`, `~/.cargo`, `~/.rustup`, etc.
+
+**Write Access:**
+- Project directory (full read/write)
+- Temp directories: `/tmp`, `/var/tmp`, `/var/folders`
+- Cache: `~/.cache`, `~/.npm`
+- Codex home: `~/.codex/` (or `$CODEX_HOME`)
+
+**Network:**
+- Full outbound network (for OpenAI API calls)
+- No inbound network
 
 ## Security Model
 
